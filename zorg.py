@@ -480,5 +480,76 @@ def logout():
     flash('You are now logged out','success')
     return redirect(url_for('home'))
 
+class profileformhos(db.Model):
+    __tablename__ = 'profileformhos'
+    name = db.Column(db.String(200))
+    age = db.Column(db.String(20))
+    gender = db.Column(db.String(4))
+    salary = db.Column(db.String(10))
+    doc_id = db.Column(db.String(20), primary_key=True)
+    type = db.Column(db.String(200))                    #Type means the speciality of doctor, eg: cardio/ortho/neuro/etc.
+    hospitalid = db.Column(db.String(200))
+
+    def __init__(self, name, age, gender, salary, id, type, hospitalid):
+        self.name = name
+        self.age = age
+        self.gender = gender
+        self.salary = salary
+        self.hospitalid = hospitalid
+
+
+@app.route('/addprofile_hos', methods=['GET','POST'])
+@is_logged_in
+def addprofile_hos():
+    username = session['username']
+    if request.method =='POST':
+        name = request.form['name']
+        age = request.form['age']
+        gender = request.form['gender']
+        salary = request.form['salary']
+        doc_id = request.form['id']
+        type = request.form['type']
+        hospitalid = request.form['hospitalid']
+        if db.session.query(profileformhos).filter(profileformhos.username == username).count() == 0:
+            data = profileformhos(name, age, gender, salary, doc_id, type, hospitalid)
+            db.session.add(data)
+            db.session.commit()
+            flash('Profile Created', 'success')
+            return redirect(url_for('dashboardmnmg'))
+        else:
+            return redirect(url_for('editprofilehos'))
+    return render_template('addprofile_hos.html')
+
+@app.route('/editprofilehos', methods=['GET','POST'])
+@is_logged_in
+def editprofilehos():
+    username = session['username']
+    user = db.session.query(profileformhos).filter(profileformhos.id == id).first()
+    db.session.commit()
+    if request.method == 'POST':
+        name = request.form['name']
+        if name != '':
+            user.name = name
+        age = request.form['age']
+        if age != '':
+            user.age = age
+        gender = request.form['gender']
+        if gender != '':
+            user.gender = gender
+        salary = request.form['salary']
+        if salary != '':
+            user.salary = salary
+        type = request.form['type']
+        if type != '':
+            user.type = type
+        hospitalid = request.form['hospitalid']
+        if hospitalid != '':
+            user.hospitalid = hospitalid
+        db.session.commit()
+        flash('Profile Updated','success')
+        return redirect(url_for('dashboardmnmg'))
+    return render_template('editprofilehos.html',profile = db.session.query(profileformhos).filter(profileformhos.id == id).all())
+
 if __name__=='__main__':
     app.run() 
+   
