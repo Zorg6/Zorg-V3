@@ -481,7 +481,7 @@ def logout():
     return redirect(url_for('home'))
 
 class profileformhos(db.Model):
-    __tablename__ = 'profileformhos'
+    __tablename__ = 'staffdetails'
     name = db.Column(db.String(200))
     age = db.Column(db.String(20))
     gender = db.Column(db.String(4))
