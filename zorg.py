@@ -520,11 +520,10 @@ def addprofile_hos():
             return redirect(url_for('editprofilehos'))
     return render_template('addprofile_hos.html')
 
-@app.route('/editprofilehos', methods=['GET','POST'])
+@app.route('/editprofilehos/<doc_id>', methods=['GET','POST'])
 @is_logged_in
-def editprofilehos():
-    username = session['username']
-    user = db.session.query(profileformhos).filter(profileformhos.id == id).first()
+def editprofilehos(doc_id):
+    user = db.session.query(profileformhos).filter(profileformhos.id == doc_id).first()
     db.session.commit()
     if request.method == 'POST':
         name = request.form['name']
