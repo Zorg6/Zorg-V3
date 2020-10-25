@@ -479,18 +479,18 @@ def logout():
     session.clear()
     flash('You are now logged out','success')
     return redirect(url_for('home'))
-
+# Shivaram proj
 class profileformhos(db.Model):
     __tablename__ = 'staffdetails'
     name = db.Column(db.String(200))
     age = db.Column(db.String(20))
     gender = db.Column(db.String(4))
     salary = db.Column(db.String(10))
-    doc_id = db.Column(db.String(20), primary_key=True)
+    doc_id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(200))                    #Type means the speciality of doctor, eg: cardio/ortho/neuro/etc.
     hospitalid = db.Column(db.String(200))
 
-    def __init__(self, name, age, gender, salary, id, type, hospitalid):
+    def __init__(self, name, age, gender, salary, type, hospitalid):
         self.name = name
         self.age = age
         self.gender = gender
@@ -507,11 +507,10 @@ def addprofile_hos():
         age = request.form['age']
         gender = request.form['gender']
         salary = request.form['salary']
-        doc_id = request.form['id']
         type = request.form['type']
-        hospitalid = request.form['hospitalid']
-        if db.session.query(profileformhos).filter(profileformhos.username == username).count() == 0:
-            data = profileformhos(name, age, gender, salary, doc_id, type, hospitalid)
+        hospitalid = username
+        if db.session.query(profileformhos).filter(profileformhos.hospitalid == username).count() == 0:
+            data = profileformhos(name, age, gender, salary, type, hospitalid)
             db.session.add(data)
             db.session.commit()
             flash('Profile Created', 'success')
@@ -548,6 +547,21 @@ def editprofilehos(doc_id):
         flash('Profile Updated','success')
         return redirect(url_for('dashboardmnmg'))
     return render_template('editprofilehos.html',profile = db.session.query(profileformhos).filter(profileformhos.id == id).all())
+
+@app.route('/hosdetails', methods=['GET','POST'])
+@is_logged_in
+def hosdetails():
+    username = session['username']
+    help = db.session.query(profileformhos).filter(profileformhos.hospitalid == username).first()
+    db.session.commit()
+    if help is None:
+        flash("you have no one to save","success")
+        return render_template('doctors.html')
+    else:
+        return render_template('doctors.html', custdata = db.session.query(profileformhos).filter(profileformhos.hospitalid == username).all())
+    return render_template('doctors.html')
+
+
 
 if __name__=='__main__':
     app.run() 
