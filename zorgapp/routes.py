@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
+from flask import Flask, render_template, flash, redirect, url_for, session, request
 from functools import wraps
 from passlib.hash import sha256_crypt as sa
 import random
@@ -16,7 +16,7 @@ def username_predict(u, t):
         if not db.session.query(t).filter(t.username == u).count() == 0:
             x = random.randint(0, 6000)
             u += str(x)
-            s = ". Try " + u
+            s = "Try " + u
             c = False
     return s
 
@@ -97,7 +97,6 @@ def feedback():
         except:
             flash('Please enter all the details asked for', 'danger')
             return render_template('feedback.html')
-        return render_template('feedback.html')
     return render_template('feedback.html')
 
 @app.route("/route", methods = ['GET', 'POST'])
@@ -108,7 +107,6 @@ def route():
 def sitemap():
     # Route to dynamically generate a sitemap of your website/application. lastmod and priority tags omitted on static pages. lastmod included on dynamic content such as blog posts.
     from flask import make_response, request, render_template
-    import datetime
     from urllib.parse import urlparse
     host_components = urlparse(request.host_url)
     host_base = host_components.scheme + "://" + host_components.netloc
@@ -134,11 +132,11 @@ def sitemap():
 
 @app.route("/register", methods = ['GET', 'POST'])#to be changed to show a html which shows both hospital and customer
 def register():
-    return render_template("index.html")
+    return render_template("register.html")
 
-@app.route("/login", methods=['GET','POST'])#to be changed to show a html which shows both hospital and customer
+@app.route("/login", methods = ['GET','POST'])#to be changed to show a html which shows both hospital and customer
 def login():
-    return render_template("index.html")
+    return render_template("login.html")
 
 ##HOSPITAL
 
@@ -154,7 +152,7 @@ def registerhospital():
             data = RegisterMnmg(namehptl, username, password, pincode, address)
             db.session.add(data)
             db.session.commit()
-            flash('you are now registered', 'success')
+            flash('You are now registered', 'success')
             return redirect(url_for('loginhospital'))
         else:
             flash("Username already exists" + username_predict(username, RegisterMnmg), 'danger')
@@ -204,11 +202,31 @@ def registercust():
             data = CustomerDet(namecust, username, password, pincode, address, gmail_id, aadhar, age, gender, prevmedrcrds)
             db.session.add(data)
             db.session.commit()
-            flash('you are now registered', 'success')
-            return redirect(url_for('logincustomer'))
+            flash('You are now registered', 'success')
+            return redirect(url_for('registercustprofile', user = username))
         else:
-            flash("Username already exists" + username_predict(username, CustomerDet), 'danger')
+            flash("Username already exists." + username_predict(username, CustomerDet), 'danger')
     return render_template('recust.html')
+
+@app.route("/register/customer/profile/<user>", methods = ['GET', 'POST'])
+def registercustprofile(user):
+    session['url'] = 'dashboardcust'
+    if request.method == 'POST':
+        age = request.form['age']
+        gender = request.form['gender']
+        prevmedrcrds = request.form['prevmedrcrds']
+        address = request.form['address']
+        pincode = request.form['pincode']
+        update = db.session.query(CustomerDet).filter(CustomerDet.username == user).first()
+        update.age = age
+        update.gender = gender
+        update.prevmedrcrds = prevmedrcrds
+        update.address = address
+        update.pincode = pincode
+        db.session.commit()
+        flash('Profile Created', 'success')
+        return redirect(url_for('logincustomer'))
+    return render_template('addprofile.html', custuser = user)
 
 @app.route("/login/customer", methods = ['GET', 'POST'])
 def logincustomer():
@@ -299,7 +317,6 @@ def emergency():
         return render_template('emergency.html')
     else:
         return render_template('emergency.html', profile = db.session.query(Orders).filter(Orders.hptl_username_in_vicinity == username).order_by(Orders.number.asc()).all())
-    return render_template('emergency.html')
 
 @app.route("/hospital/emergency/accepted/<username>")
 @is_logged_in
@@ -364,12 +381,12 @@ def hosdetails():
     username = session['username']
     return render_template('doctors.html', docdata = db.session.query(StaffDet).filter(StaffDet.hospitalid == username).order_by(StaffDet.docid.asc()).all())
 
-@app.route("/hospital/staff/profile", methods = ['GET', 'POST'])#to be changed to showing a specific persons profile
+@app.route("/hospital/staff/profile/<userid>", methods = ['GET', 'POST'])#to be changed to showing a specific persons profile (include photo & also format the html)
 @is_logged_in
-def staffprofile():
+def staffprofile(userid):
     session['url'] = 'hosdetails'
     username = session['username']
-    return render_template("doctors.html", docdata = db.session.query(StaffDet).filter(StaffDet.hospitalid == username).order_by(StaffDet.docid.asc()).all())
+    return render_template("staffprofile.html", staffdata = db.session.query(StaffDet).filter(StaffDet.hospitalid == username, StaffDet.docid == userid).first())
 
 @app.route("/hospital/staff/profile/add", methods = ['GET', 'POST'])
 @is_logged_in
@@ -530,10 +547,9 @@ def dashboardcust():
     db.session.commit()
     if custdata.age == '' or custdata.gender == '' or custdata.prevmedrcrds == '' or custdata.address == '' or custdata.pincode == '':
         flash("Please fill these details", "danger")
-        return redirect(url_for('addprofile'))
+        return redirect(url_for('registercustprofile', user = username))
     else:
         return render_template('dashboardcust.html', custdata = db.session.query(CustomerDet).filter(CustomerDet.username == username).order_by(CustomerDet.custid.asc()).all())
-    return render_template('dashboardcust.html')
 
 @app.route("/customer/profile", methods = ['GET', 'POST'])
 @is_logged_in
@@ -656,98 +672,82 @@ def deleteappoint(number):
 @app.route("/customer/emergency")#to be changed to a html where we can select all 3 emergencies
 @is_logged_in
 def emergencycust():
-    return render_template("dashboardcust.html")
+    return render_template("customeremergency.html")
 
 @app.route("/customer/emergency/accident")
 @is_logged_in
 def accident():
-    session['url'] = 'dashboardcust'
+    session['url'] = 'emergencycust'
     username = session['username']
-    list_of_hosp_to_send_message = []
     profile = db.session.query(CustomerDet).filter(CustomerDet.username == username).first()
-    custpincode = profile.pincode
-    hospital_to_send_request = db.session.query(RegisterMnmg).filter_by(pincode = custpincode).order_by(RegisterMnmg.username.asc()).all()
-    db.session.commit()
-    for hospital in hospital_to_send_request:
-        list_of_hosp_to_send_message.append(hospital.username)
-    if profile is not None:
-        if list_of_hosp_to_send_message != []:
-            if db.session.query(Orders).filter(Orders.username_cust == username).count() == 0:
-                type = 'Accident'
-                for hptl_username_in_vicinity in list_of_hosp_to_send_message:
-                    data = Orders(hptl_username_in_vicinity, username, type, profile.address, profile.namecust, profile.aadhar, profile.age, profile.gender, profile.prevmedrcrds)
+    if profile.age != '' and profile.gender != '' and profile.prevmedrcrds != '' and profile.address != '' and profile.pincode != '':
+        hospital_to_send_request = db.session.query(RegisterMnmg).filter(RegisterMnmg.pincode == profile.pincode).order_by(RegisterMnmg.username.asc()).all()
+        if hospital_to_send_request != []:
+            type = 'Accident'
+            if db.session.query(Orders).filter(Orders.username_cust == username, Orders.type == type).count() == 0:
+                for hospital in hospital_to_send_request:
+                    data = Orders(hospital.username, username, type, profile.address, profile.namecust, profile.aadhar, profile.age, profile.gender, profile.prevmedrcrds)
                     db.session.add(data)
                     db.session.commit()
                 return render_template('request_sent.html')
             else:
-                flash('you have already sent a request, kindly wait till it is processed', 'danger')
+                flash('You have already sent a request, kindly wait till it is processed', 'danger')
                 return render_template('request_sent.html')
         else:
             return render_template('sorry.html')
     else:
         flash('Please fill in your details so that we can send it to the hospitals', 'danger')
-        return redirect(url_for('addprofile'))
-    return render_template('request_sent.html')
+        return redirect(url_for('registercustprofile', user = username))
 
 @app.route("/customer/emergency/heartattack")
 @is_logged_in
 def heartattack():
-    session['url'] = 'dashboardcust'
+    session['url'] = 'emergencycust'
     username = session['username']
-    list_of_hosp_to_send_message = []
     profile = db.session.query(CustomerDet).filter(CustomerDet.username == username).first()
-    hospital_to_send_request = db.session.query(RegisterMnmg).filter_by(pincode = profile.pincode).order_by(RegisterMnmg.username.asc()).all()
-    db.session.commit()
-    for hospital in hospital_to_send_request:
-        list_of_hosp_to_send_message.append(hospital.username)
-    if profile is not None:
-        if list_of_hosp_to_send_message != []:
-            if db.session.query(Orders).filter(Orders.username_cust == username).count() == 0:
-                type = 'Heart Attack'
-                for hptl_username_in_vicinity in list_of_hosp_to_send_message:
-                    data = Orders(hptl_username_in_vicinity, username, type, profile.address, profile.namecust, profile.aadhar, profile.age, profile.gender, profile.prevmedrcrds)
+    if profile.age != '' and profile.gender != '' and profile.prevmedrcrds != '' and profile.address != '' and profile.pincode != '':
+        hospital_to_send_request = db.session.query(RegisterMnmg).filter(RegisterMnmg.pincode == profile.pincode).order_by(RegisterMnmg.username.asc()).all()
+        if hospital_to_send_request != []:
+            type = 'Heart Attack'
+            if db.session.query(Orders).filter(Orders.username_cust == username, Orders.type == type).count() == 0:
+                for hospital in hospital_to_send_request:
+                    data = Orders(hospital.username, username, type, profile.address, profile.namecust, profile.aadhar, profile.age, profile.gender, profile.prevmedrcrds)
                     db.session.add(data)
                     db.session.commit()
                 return render_template('request_sent.html')
             else:
-                flash('you have already sent a request, kindly wait till it is processed', 'danger')
+                flash('You have already sent a request, kindly wait till it is processed', 'danger')
                 return render_template('request_sent.html')
         else:
             return render_template('sorry.html')
     else:
         flash('Please fill in your details so that we can send it to the hospitals', 'danger')
-        return redirect(url_for('addprofile'))
-    return render_template('request_sent.html')
+        return redirect(url_for('registercustprofile', user = username))
 
 @app.route("/customer/emergency/otherailments")
 @is_logged_in
 def otherailments():
-    session['url'] = 'dashboardcust'
+    session['url'] = 'emergencycust'
     username = session['username']
-    list_of_hosp_to_send_message = []
     profile = db.session.query(CustomerDet).filter(CustomerDet.username == username).first()
-    hospital_to_send_request = db.session.query(RegisterMnmg).filter_by(pincode = profile.pincode).order_by(RegisterMnmg.username.asc()).all()
-    db.session.commit()
-    for hospital in hospital_to_send_request:
-        list_of_hosp_to_send_message.append(hospital.username)
-    if profile is not None:
-        if list_of_hosp_to_send_message != []:
-            if db.session.query(Orders).filter(Orders.username_cust == username).count() == 0:
-                type = 'Other Ailments'
-                for hptl_username_in_vicinity in list_of_hosp_to_send_message:
-                    data = Orders(hptl_username_in_vicinity, username, type, profile.address, profile.namecust, profile.aadhar, profile.age, profile.gender, profile.prevmedrcrds)
+    if profile.age != '' and profile.gender != '' and profile.prevmedrcrds != '' and profile.address != '' and profile.pincode != '':
+        hospital_to_send_request = db.session.query(RegisterMnmg).filter(RegisterMnmg.pincode == profile.pincode).order_by(RegisterMnmg.username.asc()).all()
+        if hospital_to_send_request != []:
+            type = 'Other Ailments'
+            if db.session.query(Orders).filter(Orders.username_cust == username, Orders.type == type).count() == 0:
+                for hospital in hospital_to_send_request:
+                    data = Orders(hospital.username, username, type, profile.address, profile.namecust, profile.aadhar, profile.age, profile.gender, profile.prevmedrcrds)
                     db.session.add(data)
                     db.session.commit()
                 return render_template('request_sent.html')
             else:
-                flash('you have already sent a request, kindly wait till it is processed', 'danger')
+                flash('You have already sent a request, kindly wait till it is processed', 'danger')
                 return render_template('request_sent.html')
         else:
             return render_template('sorry.html')
     else:
         flash('please fill in your details so that we can send it to the hospitals', 'danger')
-        return redirect(url_for('addprofile'))
-    return render_template('request_sent.html')
+        return redirect(url_for('registercustprofile', user = username))
 
 @app.route("/logout")
 @is_logged_in
@@ -802,7 +802,6 @@ def displaytables(number):
     else:
         flash("No such table exists", "danger")
         return redirect(url_for('home'))
-    return render_template('displaytables.html')
 
 hospital_list = [['Newlife Hospital', 'newlife123', 'newlife123', '123456', 'Chennai'], ['Medwin Cares Hospital', 'medwin123', 'medwin123', '321654', 'Vellore'], ['Red Star Hospital', 'redstar123', 'redstar123', '123456', 'Madurai'], ['Angel Care Hospital', 'angel123', 'angel123', '321654', 'Trichy']]
 customer_list = [['1', 'James', 'james123', 'james123', '123456', 'Chennai', 'james@mail.com', '123456789123456', '25', 'M', 'Fever'], ['2', 'Mary', 'mary123', 'mary123', '321654', 'Vellore', 'mary@mail.com', '321654987321654', '27', 'F', 'Cholera'], ['3', 'John', 'john123', 'john123', '123456', 'Madurai', 'john@mail.com', '147258369147258', '34', 'M', 'Diahorea'], ['4', 'Julie', 'julie123', 'julie123', '321654', 'Trichy', 'julie@mail.com', '369258147369258', '29', 'F', 'Jaundice']]
@@ -946,7 +945,6 @@ def deletetablerow(number):
     else:
         flash("No such table exists", "danger")
         return redirect(url_for('admindash'))
-    return render_template("deletetablerow.html")
 
 @app.route("/admin/delete/row/<chumma>", methods = ['GET', 'POST'])
 @is_admin
@@ -986,7 +984,6 @@ def deleterow(chumma):
     else:
         flash("No such table exists", "danger")
         return redirect(url_for('admindash'))
-    return render_template("deletetablerow.html")
 
 @app.route("/admin/table/row/add/<number>", methods = ['GET', 'POST'])
 @is_admin
@@ -1106,7 +1103,6 @@ def addtablerow(number):
     else:
         flash("No such table exists", "danger")
         return redirect(url_for('admindash'))
-    return render_template('addtablerow.html')
 
 @app.route("/admin/table/row/show/<number>", methods = ['GET', 'POST'])
 @is_admin
@@ -1127,7 +1123,6 @@ def edittablerow(number):
     else:
         flash("No such table exists", "danger")
         return redirect(url_for('admindash'))
-    return render_template('edittablerow.html')
 
 @app.route("/admin/table/row/edit/<chumma>", methods = ['GET', 'POST'])
 @is_admin
@@ -1329,7 +1324,6 @@ def editrow(chumma):
     else:
         flash("No such table exists", "danger")
         return redirect(url_for('admindash'))
-    return render_template('edittablerow.html')
 
 @app.route("/admin/logout")
 @is_admin
