@@ -1,4 +1,5 @@
 # Zorg-V3
+All Necessary documentation an tutorial is given in the website.
 **Under testing, applying makeup**
 
 The program flows like :
