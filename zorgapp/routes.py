@@ -103,6 +103,29 @@ def feedback():
 def route():
     return render_template('route.html')
 
+@app.route("/extra", methods = ['GET', 'POST'])
+def extra():
+    return render_template('index2.html')
+
+@app.route("/extra2", methods = ['GET', 'POST'])
+def extra2():
+    alldata = db.session.query(CustomerDet).all()
+    return render_template('tarun2.html', alldata = alldata)
+
+@app.route("/extra3", methods = ['GET', 'POST'])
+def extra3():
+    return render_template('tarun3.html')
+
+@app.route("/game", methods = ["GET", "POST"])
+def game():
+    if request.method == "POST":
+        f = open("movieslist.txt", "r")
+        movies = f.readlines()
+        n = random.randrange(0, len(movies))
+        chosenmovie = movies[n]
+        return render_template("game.html", movie = chosenmovie)
+    return render_template("game.html")
+
 @app.route("/sitemap")
 def sitemap():
     # Route to dynamically generate a sitemap of your website/application. lastmod and priority tags omitted on static pages. lastmod included on dynamic content such as blog posts.

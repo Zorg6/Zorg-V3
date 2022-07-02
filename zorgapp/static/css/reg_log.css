@@ -108,11 +108,11 @@ h1 {
 }
 .main-agileinfo {
     width: 35%;
-    margin: 3em 0 1em;
+    margin: 3em auto 1em;
     background: rgba(0, 0, 0, 0.18);
     background-size: cover;
-    text-align: center!important;
 }
+
 input[type="text"], input[type="email"], input[type="password"] {
     font-size: 0.9em;
     color: #fff;
