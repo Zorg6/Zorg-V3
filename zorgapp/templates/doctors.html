@@ -29,14 +29,14 @@
 				<th>Delete</th>
 			</tr>
 			{% for docdata in docdata %}
-				{% if session.name == session.name %}<!--Add a button with redirecting to /hospital/staff/profile-->
+				{% if session.name == session.name %}
 					<tr>
 						<td>{{docdata.name}}</td>
 						<td>{{docdata.age}}</td>
 						<td>{{docdata.gender}}</td>
 						<td>{{docdata.salary}}</td>
 						<td>{{docdata.spec}}</td>
-						<td><a href="/hospital/staff/profile/{{docdata.docid}}">{{docdata.docid}}</a></td>
+						<td>{{docdata.docid}}</td>
 						<td><a href="/hospital/staff/profile/edit/{{docdata.docid}}" class="btn btn-default btnstretch">Edit</a></td>
 						<td><a href="/hospital/staff/profile/delete/{{docdata.docid}}" class="btn btn-default btnstretch">Delete</a></td>
 					</tr>
