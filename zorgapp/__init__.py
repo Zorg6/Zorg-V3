@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-ENV = 'prod'
+ENV = 'dev'
 developer = 'Arjun'
 if ENV == 'dev':
     app.debug = True
