@@ -15,8 +15,8 @@ if ENV == 'dev':
         app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Tarun@postgresql@localhost/Zorg'
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://hxceiafawftfoj:be308eb925667514c2f0102ea54672bd5b11a3c6643062b2012dedc396304b36@ec2-54-237-155-151.compute-1.amazonaws.com:5432/d82ngqr88afvm9'
-    app.config['SECRET_KEY'] = os.environ['secret']
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://ijzfnghlvlklnn:d57fdfbf6ec19ca5595ffd1f69cc1de8a0abf76a8b6811c3cb75801e194c4863@ec2-34-236-166-210.compute-1.amazonaws.com:5432/d167aqa4jt3mhk'
+    app.config['SECRET_KEY'] = 'segfsefsfsegaeahg32'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 
