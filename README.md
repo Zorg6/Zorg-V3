@@ -1,6 +1,6 @@
 # Zorg-V3
 All Necessary documentation an tutorial is given in the website.
-**Under testing, applying makeup**
+**Under testing, applying makeup** (zorg6.github.io)
 
 The program flows like :
 i)Management
